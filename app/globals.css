@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-bg:     #F5EFE6;
+  --brand-card:   #EDE8DF;
+  --brand-border: #C4A882;
+  --brand-text:   #2C1810;
+  --brand-muted:  #8B6F47;
+  --brand-dark:   #3D2010;
+}
+
+body {
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: 'Space Mono', 'Courier New', monospace;
+}
+
+.dot-pattern {
+  background-image: radial-gradient(circle, #C4A882 1px, transparent 1px);
+  background-size: 20px 20px;
+}
