@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { TrendingUp, TrendingDown, Landmark, Smartphone, Banknote, Trash2, Pencil, Search, Download } from 'lucide-react'
 import { deleteTransaction, deleteAccount } from '@/app/_actions/finance'
 import { AccountNewButton } from './AccountModal'
+import DebtsList from './DebtsList'
+import type { Debt } from '@/app/_actions/debts'
 
 function exportCSV(transactions: Transaction[]) {
   const header = 'Fecha,Tipo,Monto,Categoría,Descripción'
@@ -68,12 +70,16 @@ export default function FinanceDashboard({
   income,
   expense,
   balance,
+  netWorth,
+  debts,
 }: {
   transactions: Transaction[]
   accounts: Account[]
   income: number
   expense: number
   balance: number
+  netWorth: number
+  debts: Debt[]
 }) {
   const [tab, setTab]       = useState<Tab>('movements')
   const [search, setSearch] = useState('')
@@ -96,51 +102,73 @@ export default function FinanceDashboard({
 
   return (
     <div className="space-y-4">
-      {/* Balance card */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="h-1 w-full" style={{ backgroundColor: balance >= 0 ? '#22c55e' : '#ef4444' }} />
-        <div className="p-5">
-          <p className="text-brand-muted text-xs font-mono uppercase tracking-wide mb-1">Balance del mes</p>
-          <p className={`text-4xl font-bold font-mono leading-none ${balance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {balance >= 0 ? '+' : '-'}${Math.abs(balance).toLocaleString('es-AR')}
-          </p>
+      {/* Balance cards — 2 columns */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Balance del mes */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden col-span-2 md:col-span-1">
+          <div className="h-1 w-full" style={{ backgroundColor: balance >= 0 ? '#22c55e' : '#ef4444' }} />
+          <div className="p-4 md:p-5">
+            <p className="text-brand-muted text-[10px] font-mono uppercase tracking-wide mb-1">Balance del mes</p>
+            <p className={`text-3xl font-bold font-mono leading-none ${balance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {balance >= 0 ? '+' : '-'}${Math.abs(balance).toLocaleString('es-AR')}
+            </p>
 
-          {(income > 0 || expense > 0) && (
-            <div className="mt-3">
-              <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                <div
-                  className="h-full bg-green-400 rounded-full transition-all"
-                  style={{ width: `${income + expense > 0 ? (income / (income + expense)) * 100 : 0}%` }}
-                />
+            {(income > 0 || expense > 0) && (
+              <div className="mt-3">
+                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full bg-green-400 rounded-full transition-all"
+                    style={{ width: `${income + expense > 0 ? (income / (income + expense)) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="flex gap-6 mt-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center">
-                <TrendingUp size={14} className="text-green-500" />
+            <div className="flex gap-4 mt-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center">
+                  <TrendingUp size={12} className="text-green-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-brand-muted font-mono">Ingresos</p>
+                  <p className="text-xs font-bold font-mono text-green-600">${income.toLocaleString('es-AR')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] text-brand-muted font-mono">Ingresos</p>
-                <p className="text-sm font-bold font-mono text-green-600">${income.toLocaleString('es-AR')}</p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center">
+                  <TrendingDown size={12} className="text-red-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-brand-muted font-mono">Gastos</p>
+                  <p className="text-xs font-bold font-mono text-red-500">${expense.toLocaleString('es-AR')}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
-                <TrendingDown size={14} className="text-red-400" />
-              </div>
-              <div>
-                <p className="text-[10px] text-brand-muted font-mono">Gastos</p>
-                <p className="text-sm font-bold font-mono text-red-500">${expense.toLocaleString('es-AR')}</p>
-              </div>
+          </div>
+        </div>
+
+        {/* Total en cuentas */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden col-span-2 md:col-span-1">
+          <div className="h-1 w-full" style={{ backgroundColor: netWorth >= 0 ? '#6366f1' : '#ef4444' }} />
+          <div className="p-4 md:p-5 flex flex-col justify-between h-full">
+            <div>
+              <p className="text-brand-muted text-[10px] font-mono uppercase tracking-wide mb-1">Total en cuentas</p>
+              <p className={`text-3xl font-bold font-mono leading-none ${netWorth >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
+                {netWorth >= 0 ? '' : '-'}${Math.abs(netWorth).toLocaleString('es-AR')}
+              </p>
             </div>
+            <p className="text-[10px] text-brand-muted font-mono mt-4 leading-relaxed">
+              Saldo real entre todas tus cuentas
+            </p>
           </div>
         </div>
       </div>
 
       {/* Cuentas */}
       <AccountsSection accounts={accounts} />
+
+      {/* Deudas */}
+      <DebtsList debts={debts} />
 
       {/* Search + Export */}
       <div className="flex gap-2">
