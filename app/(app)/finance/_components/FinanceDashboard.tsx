@@ -8,6 +8,7 @@ import { deleteTransaction, deleteAccount } from '@/app/_actions/finance'
 import { AccountNewButton } from './AccountModal'
 import DebtsList from './DebtsList'
 import type { Debt } from '@/app/_actions/debts'
+import { CategoryManagerButton } from './CategoryManagerModal'
 
 function exportCSV(transactions: Transaction[]) {
   const header = 'Fecha,Tipo,Monto,Categoría,Descripción'
@@ -235,7 +236,10 @@ function AccountsSection({ accounts }: { accounts: Account[] }) {
     <div>
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-mono text-brand-muted uppercase tracking-wide">Cuentas</p>
-        <AccountNewButton variant="inline" />
+        <div className="flex items-center gap-3">
+          <CategoryManagerButton />
+          <AccountNewButton variant="inline" />
+        </div>
       </div>
 
       {accounts.length === 0 ? (
