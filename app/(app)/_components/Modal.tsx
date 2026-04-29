@@ -51,7 +51,7 @@ export default function Modal({
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 overscroll-contain px-5 pt-4">
+        <div className="overflow-y-auto flex-1 overscroll-contain px-5 pt-4 pb-1">
           {children}
         </div>
       </div>

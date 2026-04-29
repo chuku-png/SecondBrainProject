@@ -70,11 +70,11 @@ export default function ObjectiveForm(props: ObjectiveFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Preview */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="h-1 w-full transition-colors" style={{ backgroundColor: color }} />
-        <div className="px-4 py-3.5">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex">
+        <div className="w-1 flex-shrink-0 transition-colors" style={{ backgroundColor: color }} />
+        <div className="px-4 py-2.5">
           <p className="text-sm font-bold font-mono text-brand-text">{title || 'Título del objetivo'}</p>
           {description && (
             <p className="text-brand-muted text-[11px] font-mono mt-0.5">{description}</p>
@@ -165,7 +165,7 @@ export default function ObjectiveForm(props: ObjectiveFormProps) {
         </div>
       )}
 
-      <div className="sticky bottom-0 pt-3 pb-5 bg-white border-t border-gray-100 mt-2">
+      <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-6 bg-white border-t border-gray-100 mt-2">
         <button
           type="submit"
           disabled={isPending || !title.trim()}
