@@ -2,7 +2,7 @@
 
 import { useOptimistic, useTransition } from 'react'
 import Link from 'next/link'
-import { Flame, Pencil, Archive } from 'lucide-react'
+import { Flame, Pencil, Archive, CalendarDays } from 'lucide-react'
 import { toggleHabitLog, archiveHabit } from '@/app/_actions/habits'
 
 interface Habit {
@@ -10,6 +10,8 @@ interface Habit {
   name: string
   color: string
   streak: number
+  frequency: number
+  weeklyCount: number
   logId: string | null
   completed: boolean
 }
@@ -38,16 +40,21 @@ export default function HabitItem({
     startTransition(async () => { await archiveHabit(habit.id) })
   }
 
+  const weekDone = habit.weeklyCount
+  const weekTotal = habit.frequency
+  const weekPct = weekTotal > 0 ? Math.min(1, weekDone / weekTotal) : 0
+  const weekMet = weekDone >= weekTotal
+
   return (
     <div
       className={`bg-white rounded-2xl border border-gray-100 overflow-hidden flex transition-opacity ${
         isPending ? 'opacity-60' : ''
       }`}
     >
-      {/* Acento de color izquierdo */}
+      {/* Acento de color */}
       <div className="w-1 flex-shrink-0" style={{ backgroundColor: habit.color }} />
 
-      <div className="flex-1 flex items-center gap-3 px-4 py-3.5">
+      <div className="flex-1 flex items-center gap-3 px-4 py-3">
         {/* Checkbox */}
         <button
           onClick={handleToggle}
@@ -64,46 +71,60 @@ export default function HabitItem({
           >
             {optimisticCompleted && (
               <svg viewBox="0 0 16 16" className="w-3 h-3 text-white" fill="none">
-                <path
-                  d="M3 8l3.5 3.5L13 4"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M3 8l3.5 3.5L13 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </div>
         </button>
 
-        {/* Nombre + streak */}
+        {/* Nombre + streak + progreso semanal */}
         <div className="flex-1 min-w-0">
           <p
             className={`text-sm font-mono truncate transition-colors ${
-              optimisticCompleted
-                ? 'line-through text-gray-300'
-                : 'text-brand-text font-bold'
+              optimisticCompleted ? 'line-through text-gray-300' : 'text-brand-text font-bold'
             }`}
           >
             {habit.name}
           </p>
-          {habit.streak > 0 && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <Flame size={11} className="text-orange-400" />
-              <span className="text-orange-400 text-[10px] font-mono">
-                {habit.streak} día{habit.streak !== 1 ? 's' : ''}
+          <div className="flex items-center gap-2 mt-0.5">
+            {habit.streak > 0 && (
+              <div className="flex items-center gap-0.5">
+                <Flame size={10} className="text-orange-400" />
+                <span className="text-orange-400 text-[10px] font-mono">{habit.streak}d</span>
+              </div>
+            )}
+            {/* Progreso semanal */}
+            <div className="flex items-center gap-1">
+              <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${weekPct * 100}%`,
+                    backgroundColor: weekMet ? '#22c55e' : habit.color,
+                  }}
+                />
+              </div>
+              <span className={`text-[10px] font-mono font-bold ${weekMet ? 'text-green-500' : 'text-brand-muted'}`}>
+                {weekDone}/{weekTotal}
               </span>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Acciones */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <Link
+            href={`/habits/${habit.id}`}
+            className="p-1.5 text-gray-300 hover:text-brand-muted transition-colors rounded-lg"
+            aria-label="Ver calendario"
+          >
+            <CalendarDays size={13} />
+          </Link>
           <Link
             href={`/habits/${habit.id}/edit`}
             className="p-1.5 text-gray-300 hover:text-brand-muted transition-colors rounded-lg"
           >
-            <Pencil size={14} />
+            <Pencil size={13} />
           </Link>
           <button
             onClick={handleArchive}
@@ -111,7 +132,7 @@ export default function HabitItem({
             className="p-1.5 text-gray-300 hover:text-orange-400 transition-colors rounded-lg disabled:opacity-50"
             aria-label="Archivar hábito"
           >
-            <Archive size={14} />
+            <Archive size={13} />
           </button>
         </div>
       </div>

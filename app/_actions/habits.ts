@@ -14,10 +14,19 @@ export async function getHabitsData() {
   try {
     const { supabase, user } = await getAuthUser()
 
-    const todayStr = new Date().toISOString().split('T')[0]
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+
+    // Monday of current week
+    const dow = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+    const mondayStr = monday.toISOString().split('T')[0]
+
+    // 90 days for calendar + streak
+    const fromDate = new Date()
+    fromDate.setDate(fromDate.getDate() - 90)
+    const fromStr = fromDate.toISOString().split('T')[0]
 
     const [habitsResult, logsResult] = await Promise.all([
       supabase
@@ -30,47 +39,83 @@ export async function getHabitsData() {
         .from('habit_logs')
         .select('id, habit_id, date, completed')
         .eq('user_id', user.id)
-        .gte('date', thirtyDaysAgoStr)
+        .gte('date', fromStr)
         .order('date', { ascending: false }),
     ])
 
-    if (habitsResult.error) return { error: habitsResult.error.message, data: null }
+    if (habitsResult.error) return { error: habitsResult.error.message, data: null, calendarData: {} }
 
     const allLogs = logsResult.data ?? []
+    const totalHabits = habitsResult.data.length
 
     const habits = habitsResult.data.map(habit => {
       const habitLogs = allLogs.filter(l => l.habit_id === habit.id)
       const todayLog = habitLogs.find(l => l.date === todayStr) ?? null
 
-      // Streak: días consecutivos completados hasta hoy o ayer
-      const completedDates = new Set(
-        habitLogs.filter(l => l.completed).map(l => l.date)
-      )
+      // Streak
+      const completedDates = new Set(habitLogs.filter(l => l.completed).map(l => l.date))
       let streak = 0
       const check = new Date()
       if (!completedDates.has(todayStr)) check.setDate(check.getDate() - 1)
-
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 90; i++) {
         const d = check.toISOString().split('T')[0]
-        if (completedDates.has(d)) {
-          streak++
-          check.setDate(check.getDate() - 1)
-        } else {
-          break
-        }
+        if (completedDates.has(d)) { streak++; check.setDate(check.getDate() - 1) }
+        else break
       }
+
+      // Weekly count (Mon–today)
+      const weeklyCount = habitLogs.filter(
+        l => l.completed && l.date >= mondayStr && l.date <= todayStr
+      ).length
 
       return {
         ...habit,
         logId: todayLog?.id ?? null,
         completed: todayLog?.completed ?? false,
         streak,
+        weeklyCount,
       }
     })
 
-    return { data: habits, error: null }
+    // Global calendar: date -> { done, total } using current active habits count
+    const calendarData: Record<string, { done: number; total: number }> = {}
+    for (const log of allLogs) {
+      if (!log.completed) continue
+      if (!calendarData[log.date]) calendarData[log.date] = { done: 0, total: totalHabits }
+      calendarData[log.date].done++
+    }
+
+    return { data: habits, calendarData, error: null }
   } catch {
-    return { error: 'Error al obtener hábitos', data: null }
+    return { error: 'Error al obtener hábitos', data: null, calendarData: {} }
+  }
+}
+
+export async function getHabitWithCalendar(id: string) {
+  try {
+    const { supabase, user } = await getAuthUser()
+
+    const [habitRes, logsRes] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('id, name, color, frequency, type')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single(),
+      supabase
+        .from('habit_logs')
+        .select('date, completed')
+        .eq('habit_id', id)
+        .eq('user_id', user.id)
+        .eq('completed', true),
+    ])
+
+    if (habitRes.error || !habitRes.data) return { error: 'Hábito no encontrado', data: null }
+
+    const completedDates = (logsRes.data ?? []).map(l => l.date)
+    return { data: { habit: habitRes.data, completedDates }, error: null }
+  } catch {
+    return { error: 'Error al obtener calendario', data: null }
   }
 }
 

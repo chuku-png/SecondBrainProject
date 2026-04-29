@@ -2,12 +2,14 @@ import { getHabitsData } from '@/app/_actions/habits'
 import { Flame, CheckCircle2 } from 'lucide-react'
 import HabitItem from './_components/HabitItem'
 import { HabitNewButton } from './_components/HabitModal'
+import WeekProgressPanel from './_components/WeekProgressPanel'
+import MonthCalendar from './_components/MonthCalendar'
 
 export default async function HabitsPage() {
-  const { data: habits, error } = await getHabitsData()
+  const { data: habits, calendarData, error } = await getHabitsData()
 
   const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
+  const todayStr  = today.toISOString().split('T')[0]
   const dateLabel = today.toLocaleDateString('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long',
   })
@@ -40,6 +42,7 @@ export default async function HabitsPage() {
               </div>
             )}
 
+            {/* Progress bar mobile */}
             {totalCount > 0 && (
               <div className="md:hidden bg-white rounded-2xl border border-gray-100 px-4 py-3 mb-4 flex items-center justify-between">
                 <span className="text-brand-muted text-xs font-mono">Hoy completados</span>
@@ -73,10 +76,26 @@ export default async function HabitsPage() {
                 )}
               </div>
             )}
+
+            {/* Progreso semanal — mobile (below list) */}
+            {habits && habits.length > 0 && (
+              <div className="md:hidden mt-4">
+                <WeekProgressPanel habits={habits} />
+              </div>
+            )}
+
+            {/* Calendario global — mobile */}
+            {habits && habits.length > 0 && (
+              <div className="md:hidden mt-4">
+                <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide mb-2">Calendario</p>
+                <MonthCalendar calendarData={calendarData ?? {}} />
+              </div>
+            )}
           </div>
 
           {/* Sidebar desktop */}
           <div className="hidden md:flex md:flex-col md:gap-4 md:w-72 md:flex-shrink-0">
+            {/* Hoy */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-4 pt-3.5 pb-1">
                 <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide">Hoy</p>
@@ -95,6 +114,12 @@ export default async function HabitsPage() {
               )}
             </div>
 
+            {/* Progreso semanal */}
+            {habits && habits.length > 0 && (
+              <WeekProgressPanel habits={habits} />
+            )}
+
+            {/* Mejor racha */}
             {topStreak > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
                 <Flame size={20} className="text-orange-400 flex-shrink-0" />
@@ -102,6 +127,14 @@ export default async function HabitsPage() {
                   <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide">Mejor racha activa</p>
                   <p className="text-brand-dark font-bold font-mono text-lg leading-none mt-0.5">{topStreak} días</p>
                 </div>
+              </div>
+            )}
+
+            {/* Calendario global */}
+            {habits && habits.length > 0 && (
+              <div>
+                <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide mb-2">Calendario</p>
+                <MonthCalendar calendarData={calendarData ?? {}} />
               </div>
             )}
 

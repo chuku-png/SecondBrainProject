@@ -5,16 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createHabit, updateHabit } from '@/app/_actions/habits'
 
 const COLORS = [
-  '#6366f1',
-  '#22c55e',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#06b6d4',
-  '#ec4899',
-  '#f97316',
-  '#3D2010',
-  '#84cc16',
+  '#6366f1', '#22c55e', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#06b6d4', '#ec4899', '#f97316',
+  '#3D2010', '#84cc16',
 ]
 
 interface HabitFormProps {
@@ -32,41 +25,45 @@ interface HabitFormProps {
 export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: HabitFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [name, setName] = useState(defaultValues?.name ?? '')
-  const [type, setType] = useState<'daily' | 'weekly'>(defaultValues?.type ?? 'daily')
-  const [color, setColor] = useState(defaultValues?.color ?? COLORS[0])
-  const [error, setError] = useState('')
+  const [name, setName]         = useState(defaultValues?.name ?? '')
+  const [color, setColor]       = useState(defaultValues?.color ?? COLORS[0])
+  const [frequency, setFrequency] = useState(defaultValues?.frequency ?? 7)
+  const [error, setError]       = useState('')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-
+    const type = frequency === 7 ? 'daily' : 'weekly'
     startTransition(async () => {
-      const payload = { name, type, color, frequency: 1 }
-
       const result =
         mode === 'create'
-          ? await createHabit(payload)
-          : await updateHabit(habitId!, payload)
-
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-
+          ? await createHabit({ name, type, color, frequency })
+          : await updateHabit(habitId!, { name, type, color, frequency })
+      if (result.error) { setError(result.error); return }
       router.refresh()
       if (onSuccess) onSuccess()
       else router.push('/habits')
     })
   }
 
+  const freqLabel = frequency === 7
+    ? 'Todos los días'
+    : `${frequency}x por semana`
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Preview */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex">
+        <div className="w-1 flex-shrink-0" style={{ backgroundColor: color }} />
+        <div className="px-4 py-2.5">
+          <p className="text-sm font-bold font-mono text-brand-text">{name || 'Nombre del hábito'}</p>
+          <p className="text-[10px] font-mono text-brand-muted mt-0.5">{freqLabel}</p>
+        </div>
+      </div>
+
       {/* Nombre */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">
-          Nombre
-        </label>
+        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">Nombre</label>
         <input
           type="text"
           value={name}
@@ -77,34 +74,37 @@ export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: H
         />
       </div>
 
-      {/* Tipo */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">
-          Frecuencia
-        </label>
-        <div className="flex gap-3">
-          {(['daily', 'weekly'] as const).map(t => (
+      {/* Frecuencia semanal */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">Frecuencia semanal</label>
+          <span className="text-xs font-bold font-mono text-brand-dark">{freqLabel}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {[1, 2, 3, 4, 5, 6, 7].map(n => (
             <button
-              key={t}
+              key={n}
               type="button"
-              onClick={() => setType(t)}
-              className={`flex-1 h-11 rounded-xl border text-sm font-mono font-bold transition ${
-                type === t
-                  ? 'bg-brand-dark border-brand-dark text-white'
-                  : 'bg-brand-bg border-brand-border text-brand-muted hover:border-brand-dark'
+              onClick={() => setFrequency(n)}
+              className={`flex-1 h-10 rounded-xl text-sm font-bold font-mono transition-colors ${
+                frequency === n
+                  ? 'text-white'
+                  : 'bg-brand-bg border border-brand-border text-brand-muted hover:border-brand-dark'
               }`}
+              style={frequency === n ? { backgroundColor: color } : undefined}
             >
-              {t === 'daily' ? 'Diario' : 'Semanal'}
+              {n === 7 ? '✓' : n}
             </button>
           ))}
         </div>
+        <p className="text-[10px] font-mono text-brand-muted">
+          {frequency === 7 ? 'El hábito se trackea todos los días' : `Meta: ${frequency} veces de 7 posibles esta semana`}
+        </p>
       </div>
 
       {/* Color */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">
-          Color
-        </label>
+        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">Color</label>
         <div className="flex gap-2.5 flex-wrap">
           {COLORS.map(c => (
             <button
@@ -121,27 +121,13 @@ export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: H
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           <p className="text-red-700 text-sm font-mono">{error}</p>
         </div>
       )}
 
-      {/* Preview */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex">
-        <div className="w-1 flex-shrink-0" style={{ backgroundColor: color }} />
-        <div className="px-4 py-3">
-          <p className="text-sm font-bold font-mono text-brand-text">
-            {name || 'Nombre del hábito'}
-          </p>
-          <p className="text-[10px] font-mono text-brand-muted mt-0.5">
-            {type === 'daily' ? 'Diario' : 'Semanal'} · Vista previa
-          </p>
-        </div>
-      </div>
-
-      <div className="sticky bottom-0 pt-3 pb-5 bg-white border-t border-gray-100 mt-2">
+      <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-6 bg-white border-t border-gray-100 mt-2">
         <button
           type="submit"
           disabled={isPending || !name.trim()}
