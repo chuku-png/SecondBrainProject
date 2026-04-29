@@ -8,7 +8,6 @@ import {
   CheckSquare2,
   DollarSign,
   Dumbbell,
-  Plus,
   Grid2X2,
   FolderOpen,
   Briefcase,
@@ -16,7 +15,6 @@ import {
   Crosshair,
   X,
 } from 'lucide-react'
-import QuickActionsSheet from './QuickActionsSheet'
 
 const mainItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Inicio'   },
@@ -81,8 +79,7 @@ function MoreSheet({ onClose }: { onClose: () => void }) {
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const [showActions, setShowActions] = useState(false)
-  const [showMore, setShowMore]       = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const isMoreActive = moreItems.some(
     i => pathname === i.href || pathname.startsWith(i.href + '/')
@@ -91,9 +88,8 @@ export default function BottomNav() {
   return (
     <>
       <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-card border-t border-brand-border/30 z-20 pb-safe">
-        <div className="flex items-end h-16">
-          {/* Left 2 items */}
-          {mainItems.slice(0, 2).map(({ href, icon: Icon, label }) => {
+        <div className="flex items-center h-14">
+          {mainItems.map(({ href, icon: Icon, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link
@@ -109,34 +105,6 @@ export default function BottomNav() {
             )
           })}
 
-          {/* Center Nuevo */}
-          <button
-            onClick={() => setShowActions(true)}
-            className="flex-1 flex flex-col items-center justify-end pb-2 gap-0.5"
-          >
-            <div className="w-12 h-12 rounded-full bg-brand-dark flex items-center justify-center shadow-lg -mt-5">
-              <Plus size={22} color="white" strokeWidth={2.5} />
-            </div>
-          </button>
-
-          {/* Right 2 items */}
-          {mainItems.slice(2).map(({ href, icon: Icon, label }) => {
-            const active = pathname === href || pathname.startsWith(href + '/')
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-mono transition-colors ${
-                  active ? 'text-brand-dark' : 'text-brand-muted'
-                }`}
-              >
-                <Icon size={18} strokeWidth={active ? 2.5 : 1.75} />
-                <span className="leading-none">{label}</span>
-              </Link>
-            )
-          })}
-
-          {/* Más */}
           <button
             onClick={() => setShowMore(true)}
             className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-mono transition-colors ${
@@ -149,8 +117,7 @@ export default function BottomNav() {
         </div>
       </nav>
 
-      {showMore   && <MoreSheet onClose={() => setShowMore(false)} />}
-      {showActions && <QuickActionsSheet onClose={() => setShowActions(false)} />}
+      {showMore && <MoreSheet onClose={() => setShowMore(false)} />}
     </>
   )
 }
