@@ -8,7 +8,6 @@ import { ArrowUpRight, DollarSign, Dumbbell, FolderOpen, Briefcase, Heart, Cross
 import HabitsDayCard from './_components/HabitsDayCard'
 import DashboardRadar from './_components/DashboardRadar'
 import TodoDay, { type AgendaItem } from './_components/TodoDay'
-import DashboardSpeedDial from './_components/DashboardSpeedDial'
 
 export default async function DashboardPage() {
   const user = await getAuthUser()
@@ -310,7 +309,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <DashboardSpeedDial />
     </div>
   )
 }

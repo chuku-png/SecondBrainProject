@@ -7,35 +7,99 @@ import {
   LayoutDashboard,
   CheckSquare2,
   DollarSign,
-  Briefcase,
   Dumbbell,
   Plus,
+  Grid2X2,
+  FolderOpen,
+  Briefcase,
+  Heart,
+  Crosshair,
+  X,
 } from 'lucide-react'
 import QuickActionsSheet from './QuickActionsSheet'
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Inicio' },
-  { href: '/habits',    icon: CheckSquare2,    label: 'Hábitos' },
+const mainItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Inicio'   },
+  { href: '/habits',    icon: CheckSquare2,    label: 'Hábitos'  },
   { href: '/finance',   icon: DollarSign,      label: 'Finanzas' },
-  { href: '/work',      icon: Briefcase,       label: 'Trabajo' },
-  { href: '/gym',       icon: Dumbbell,        label: 'Gym' },
+  { href: '/gym',       icon: Dumbbell,        label: 'Gym'      },
 ]
 
-export default function BottomNav() {
+const moreItems = [
+  { href: '/work',       icon: Briefcase,  label: 'Trabajo'   },
+  { href: '/projects',   icon: FolderOpen, label: 'Proyectos' },
+  { href: '/ro',         icon: Heart,      label: 'Ro'        },
+  { href: '/objectives', icon: Crosshair,  label: 'Objetivos' },
+]
+
+function MoreSheet({ onClose }: { onClose: () => void }) {
   const pathname = usePathname()
-  const [showActions, setShowActions] = useState(false)
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-card border-t border-brand-border/30 z-20">
-        <div className="flex items-center">
-          {navItems.map(({ href, icon: Icon, label }) => {
+      <div
+        className="fixed inset-0 bg-black/40 z-30 animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-white rounded-t-3xl shadow-xl animate-in slide-in-from-bottom duration-300 pb-safe">
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        </div>
+        <div className="flex items-center justify-between px-5 py-3">
+          <p className="text-sm font-bold font-mono text-brand-text">Módulos</p>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-brand-muted"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 px-5 pb-8 pt-1">
+          {moreItems.map(({ href, icon: Icon, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-mono transition-colors ${
+                onClick={onClose}
+                className={`flex items-center gap-3 p-4 rounded-2xl border transition-colors ${
+                  active
+                    ? 'border-brand-dark bg-brand-dark text-white'
+                    : 'border-gray-100 bg-gray-50 text-brand-text hover:bg-gray-100'
+                }`}
+              >
+                <Icon size={18} strokeWidth={active ? 2.5 : 1.75} />
+                <span className="text-sm font-bold font-mono">{label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default function BottomNav() {
+  const pathname = usePathname()
+  const [showActions, setShowActions] = useState(false)
+  const [showMore, setShowMore]       = useState(false)
+
+  const isMoreActive = moreItems.some(
+    i => pathname === i.href || pathname.startsWith(i.href + '/')
+  )
+
+  return (
+    <>
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-card border-t border-brand-border/30 z-20 pb-safe">
+        <div className="flex items-end h-16">
+          {/* Left 2 items */}
+          {mainItems.slice(0, 2).map(({ href, icon: Icon, label }) => {
+            const active = pathname === href || pathname.startsWith(href + '/')
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-mono transition-colors ${
                   active ? 'text-brand-dark' : 'text-brand-muted'
                 }`}
               >
@@ -45,19 +109,47 @@ export default function BottomNav() {
             )
           })}
 
-          {/* Quick actions trigger */}
+          {/* Center Nuevo */}
           <button
             onClick={() => setShowActions(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5"
+            className="flex-1 flex flex-col items-center justify-end pb-2 gap-0.5"
           >
-            <div className="w-8 h-8 rounded-full bg-brand-dark flex items-center justify-center -mt-4 shadow-md">
-              <Plus size={18} color="white" strokeWidth={2.5} />
+            <div className="w-12 h-12 rounded-full bg-brand-dark flex items-center justify-center shadow-lg -mt-5">
+              <Plus size={22} color="white" strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-mono text-brand-muted leading-none mt-0.5">Nuevo</span>
+          </button>
+
+          {/* Right 2 items */}
+          {mainItems.slice(2).map(({ href, icon: Icon, label }) => {
+            const active = pathname === href || pathname.startsWith(href + '/')
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-mono transition-colors ${
+                  active ? 'text-brand-dark' : 'text-brand-muted'
+                }`}
+              >
+                <Icon size={18} strokeWidth={active ? 2.5 : 1.75} />
+                <span className="leading-none">{label}</span>
+              </Link>
+            )
+          })}
+
+          {/* Más */}
+          <button
+            onClick={() => setShowMore(true)}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-mono transition-colors ${
+              isMoreActive ? 'text-brand-dark' : 'text-brand-muted'
+            }`}
+          >
+            <Grid2X2 size={18} strokeWidth={isMoreActive ? 2.5 : 1.75} />
+            <span className="leading-none">Más</span>
           </button>
         </div>
       </nav>
 
+      {showMore   && <MoreSheet onClose={() => setShowMore(false)} />}
       {showActions && <QuickActionsSheet onClose={() => setShowActions(false)} />}
     </>
   )
