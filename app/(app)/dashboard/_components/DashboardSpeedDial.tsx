@@ -40,7 +40,7 @@ export default function DashboardSpeedDial() {
       )}
 
       {/* Speed dial container */}
-      <div className="fixed bottom-8 right-6 z-30 flex flex-col items-end gap-3">
+      <div className="fixed bottom-20 md:bottom-8 right-4 md:right-6 z-30 flex flex-col items-end gap-3">
         {/* Options — stagger upward when open */}
         {OPTIONS.map((opt, i) => (
           <div
