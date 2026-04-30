@@ -1,36 +1,32 @@
-import { getWorkouts } from '@/app/_actions/gym'
+import { getWorkouts, getWorkoutsCalendar } from '@/app/_actions/gym'
+import { localDateStr, localMondayStr } from '@/lib/timezone'
 import { Dumbbell } from 'lucide-react'
 import WorkoutItem from './_components/WorkoutItem'
 import { GymNewButton } from './_components/WorkoutModal'
+import GymCalendar from './_components/GymCalendar'
 
 export default async function GymPage() {
-  const { data: workouts, error } = await getWorkouts(30)
+  const todayStr   = localDateStr()
+  const mondayStr  = localMondayStr()
 
-  const today = new Date().toISOString().split('T')[0]
+  const [{ data: workouts, error }, { data: calendarData }] = await Promise.all([
+    getWorkouts(60),
+    getWorkoutsCalendar(),
+  ])
 
-  // This week range (Mon–Sun)
-  const now = new Date()
-  const dow = now.getDay()
-  const diffMon = dow === 0 ? -6 : 1 - dow
-  const monday = new Date(now)
-  monday.setDate(monday.getDate() + diffMon)
-  const mondayStr = monday.toISOString().split('T')[0]
-
-  const todayWorkouts  = workouts?.filter(w => w.date === today) ?? []
-  const weekWorkouts   = workouts?.filter(w => w.date >= mondayStr && w.date <= today) ?? []
-  const pastWorkouts   = workouts?.filter(w => w.date !== today) ?? []
+  const todayWorkouts = workouts?.filter(w => w.date === todayStr) ?? []
+  const weekWorkouts  = workouts?.filter(w => w.date >= mondayStr && w.date <= todayStr) ?? []
+  const pastWorkouts  = workouts?.filter(w => w.date !== todayStr) ?? []
 
   const totalMinutes = workouts?.reduce((s, w) => s + (w.duration_minutes ?? 0), 0) ?? 0
   const weekMinutes  = weekWorkouts.reduce((s, w) => s + (w.duration_minutes ?? 0), 0)
 
-  // Type breakdown
   const typeCount: Record<string, number> = {}
   for (const w of workouts ?? []) {
     typeCount[w.type] = (typeCount[w.type] ?? 0) + 1
   }
   const topTypes = Object.entries(typeCount).sort((a, b) => b[1] - a[1]).slice(0, 4)
 
-  // Group past by date
   const grouped: Record<string, typeof pastWorkouts> = {}
   for (const w of pastWorkouts) {
     if (!grouped[w.date]) grouped[w.date] = []
@@ -49,7 +45,7 @@ export default async function GymPage() {
       <header className="px-4 pt-6 pb-4 md:px-8 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-brand-text font-mono">Gym</h1>
-          <p className="text-brand-muted text-sm font-mono mt-0.5">Últimos 30 registros</p>
+          <p className="text-brand-muted text-sm font-mono mt-0.5">Últimos 60 registros</p>
         </div>
         <GymNewButton variant="header" />
       </header>
@@ -82,6 +78,12 @@ export default async function GymPage() {
                 </div>
               </div>
             )}
+
+            {/* Calendario mobile */}
+            <div className="md:hidden">
+              <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide mb-2">Calendario</p>
+              <GymCalendar calendarData={calendarData ?? {}} todayStr={todayStr} />
+            </div>
 
             {!workouts || workouts.length === 0 ? (
               <div className="text-center py-16">
@@ -134,6 +136,12 @@ export default async function GymPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Calendario */}
+            <div>
+              <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide mb-2">Calendario</p>
+              <GymCalendar calendarData={calendarData ?? {}} todayStr={todayStr} />
             </div>
 
             {/* Tipos favoritos */}

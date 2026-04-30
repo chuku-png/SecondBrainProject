@@ -484,5 +484,10 @@ CREATE POLICY "solo admin ve audit_logs" ON audit_logs
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- ✅ MIGRACIONES
+
+-- Agrega linked_module a habits (para vincular hábitos con módulos como gym)
+ALTER TABLE habits ADD COLUMN IF NOT EXISTS linked_module TEXT;
+
 -- ✅ FIN DEL SCRIPT
 -- Si llegaste aquí sin errores, todo está configurado correctamente.

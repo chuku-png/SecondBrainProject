@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { localDateStr } from '@/lib/timezone'
 
 async function getAuthUser() {
   const supabase = await createClient()
@@ -273,7 +274,7 @@ export async function updateMilestoneValue(id: string, value: number) {
 
     if (!milestone) return { error: 'Hito no encontrado' }
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = localDateStr()
     const newStatus =
       value >= milestone.target_value ? 'done' :
       milestone.period_end < today   ? 'failed' :
@@ -388,7 +389,7 @@ export async function recalculateMilestone(id: string) {
       currentValue = (data ?? []).reduce((s, r) => s + (Number(r.hours_worked) || 0), 0)
     }
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = localDateStr()
     const newStatus =
       currentValue >= m.target_value ? 'done' :
       m.period_end < today           ? 'failed' :

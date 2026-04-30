@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import Modal from '@/app/(app)/_components/Modal'
 import { createWorkout } from '@/app/_actions/gym'
+import { localDateStr } from '@/lib/timezone'
 
 const WORKOUT_TYPES = [
   'Fuerza', 'Cardio', 'Yoga', 'Natación',
@@ -19,7 +20,7 @@ function WorkoutForm({ onSuccess }: { onSuccess: () => void }) {
   const [type, setType]       = useState('')
   const [duration, setDuration] = useState('')
   const [notes, setNotes]     = useState('')
-  const [date, setDate]       = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate]       = useState(localDateStr())
   const [error, setError]     = useState('')
 
   function handleSubmit(e: React.FormEvent) {

@@ -145,7 +145,7 @@ export default function RoForm(props: RoFormProps) {
         </div>
       )}
 
-      <div className="sticky bottom-0 pt-3 pb-5 bg-white border-t border-gray-100 mt-2">
+      <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-6 bg-white border-t border-gray-100 mt-2">
         <button
           type="submit"
           disabled={isPending || !title.trim() || !date}

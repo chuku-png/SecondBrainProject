@@ -17,7 +17,7 @@ export default async function EditHabitPage({
   const supabase = await createClient()
   const { data: habit } = await supabase
     .from('habits')
-    .select('id, name, type, color, frequency')
+    .select('id, name, type, color, frequency, linked_module')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -46,6 +46,7 @@ export default async function EditHabitPage({
             type: habit.type as 'daily' | 'weekly',
             color: habit.color,
             frequency: habit.frequency,
+            linked_module: habit.linked_module,
           }}
         />
       </div>

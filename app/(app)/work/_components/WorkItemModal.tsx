@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import Modal from '@/app/(app)/_components/Modal'
 import { createWorkItem } from '@/app/_actions/work'
+import { localDateStr } from '@/lib/timezone'
 
 const inputCls = 'h-11 px-4 rounded-xl bg-brand-bg border border-brand-border text-brand-text placeholder-brand-border text-sm font-mono focus:outline-none focus:border-brand-dark transition'
 
@@ -14,7 +15,7 @@ function WorkItemForm({ onSuccess }: { onSuccess: () => void }) {
   const [title, setTitle]   = useState('')
   const [notes, setNotes]   = useState('')
   const [hours, setHours]   = useState('')
-  const [date, setDate]     = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate]     = useState(localDateStr())
   const [error, setError]   = useState('')
 
   function handleSubmit(e: React.FormEvent) {

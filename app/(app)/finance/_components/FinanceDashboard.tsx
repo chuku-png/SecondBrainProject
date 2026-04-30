@@ -9,6 +9,7 @@ import { AccountNewButton } from './AccountModal'
 import DebtsList from './DebtsList'
 import type { Debt } from '@/app/_actions/debts'
 import { CategoryManagerButton } from './CategoryManagerModal'
+import { localDateStr } from '@/lib/timezone'
 
 function exportCSV(transactions: Transaction[]) {
   const header = 'Fecha,Tipo,Monto,Categoría,Descripción'
@@ -20,7 +21,7 @@ function exportCSV(transactions: Transaction[]) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `finanzas-${new Date().toISOString().split('T')[0]}.csv`
+  a.download = `finanzas-${localDateStr()}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

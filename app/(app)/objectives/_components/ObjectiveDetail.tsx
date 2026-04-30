@@ -64,7 +64,10 @@ function LinkBadge({ link, onDelete }: { link: Link; onDelete: () => void }) {
       </div>
       <button
         disabled={isPending}
-        onClick={() => startTransition(async () => { await deleteLink(link.id); onDelete() })}
+        onClick={() => {
+          if (!confirm(`¿Desvincular "${link.entity_label}"?`)) return
+          startTransition(async () => { await deleteLink(link.id); onDelete() })
+        }}
         className="text-gray-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
       >
         <X size={12} />

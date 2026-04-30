@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Trash2, RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { deleteMilestone, recalculateMilestone, updateMilestoneValue } from '@/app/_actions/objectives'
+import { localDateStr } from '@/lib/timezone'
 
 interface Milestone {
   id: string
@@ -75,7 +76,7 @@ export default function MilestoneCard({ milestone, objectiveColor }: { milestone
       const result = await updateMilestoneValue(milestone.id, val)
       if (result.error) { setError(result.error); return }
       setLocalValue(val)
-      const today = new Date().toISOString().split('T')[0]
+      const today = localDateStr()
       setLocalStatus(
         val >= milestone.target_value ? 'done' :
         milestone.period_end < today  ? 'failed' :

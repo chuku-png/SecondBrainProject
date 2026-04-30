@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { localDateStr } from '@/lib/timezone'
 
 async function getAuthUser() {
   const supabase = await createClient()
@@ -242,7 +243,7 @@ export async function toggleTask(id: string, currentStatus: 'pending' | 'done') 
         supabase.from('project_tasks').select('id').eq('project_id', task.project_id),
       ])
       const pct = allTasks?.length ? Math.round(((doneTasks?.length ?? 0) / allTasks.length) * 100) : 0
-      const today = new Date().toISOString().split('T')[0]
+      const today = localDateStr()
       await Promise.all(linkedMilestones.map(m => {
         const newStatus = pct >= m.target_value ? 'done' : m.period_end < today ? 'failed' : 'pending'
         return supabase.from('objective_milestones')

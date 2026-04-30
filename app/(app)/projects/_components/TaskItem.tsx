@@ -3,6 +3,7 @@
 import { useOptimistic, useTransition } from 'react'
 import { Trash2, CalendarDays } from 'lucide-react'
 import { toggleTask, deleteTask } from '@/app/_actions/projects'
+import { localDateStr } from '@/lib/timezone'
 
 interface TaskItemProps {
   task: {
@@ -15,8 +16,8 @@ interface TaskItemProps {
 }
 
 function formatDueDate(dateStr: string) {
-  const today = new Date().toISOString().split('T')[0]
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  const today = localDateStr()
+  const tomorrow = localDateStr(new Date(Date.now() + 86400000))
   if (dateStr === today) return { label: 'Hoy', overdue: false, today: true }
   if (dateStr === tomorrow) return { label: 'Mañana', overdue: false, today: false }
   const d = new Date(dateStr + 'T12:00:00')

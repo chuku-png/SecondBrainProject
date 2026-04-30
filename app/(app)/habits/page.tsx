@@ -1,16 +1,26 @@
 import { getHabitsData } from '@/app/_actions/habits'
+import { localDateStr } from '@/lib/timezone'
 import { Flame, CheckCircle2 } from 'lucide-react'
 import HabitItem from './_components/HabitItem'
 import { HabitNewButton } from './_components/HabitModal'
 import WeekProgressPanel from './_components/WeekProgressPanel'
 import MonthCalendar from './_components/MonthCalendar'
+import DateNav from './_components/DateNav'
 
-export default async function HabitsPage() {
-  const { data: habits, calendarData, error } = await getHabitsData()
+export default async function HabitsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>
+}) {
+  const { date: dateParam } = await searchParams
+  const todayStr = localDateStr()
+  const selectedDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) && dateParam <= todayStr
+    ? dateParam
+    : todayStr
 
-  const today = new Date()
-  const todayStr  = today.toISOString().split('T')[0]
-  const dateLabel = today.toLocaleDateString('es-AR', {
+  const { data: habits, calendarData, error } = await getHabitsData(selectedDate)
+
+  const dateLabel = new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
@@ -28,8 +38,15 @@ export default async function HabitsPage() {
           <h1 className="text-2xl font-bold text-brand-text font-mono">Hábitos</h1>
           <p className="text-brand-muted text-sm font-mono capitalize mt-0.5">{dateLabel}</p>
         </div>
-        <HabitNewButton variant="header" />
+        <div className="flex items-center gap-2">
+          <HabitNewButton variant="header" />
+        </div>
       </header>
+
+      {/* Date navigation */}
+      <div className="px-4 md:px-8 mb-3 flex items-center justify-center">
+        <DateNav selectedDate={selectedDate} todayStr={todayStr} />
+      </div>
 
       <div className="px-4 pb-8 md:px-8 md:max-w-5xl">
         <div className="md:flex md:gap-6 md:items-start">
@@ -45,7 +62,9 @@ export default async function HabitsPage() {
             {/* Progress bar mobile */}
             {totalCount > 0 && (
               <div className="md:hidden bg-white rounded-2xl border border-gray-100 px-4 py-3 mb-4 flex items-center justify-between">
-                <span className="text-brand-muted text-xs font-mono">Hoy completados</span>
+                <span className="text-brand-muted text-xs font-mono">
+                  {selectedDate === todayStr ? 'Hoy completados' : 'Completados'}
+                </span>
                 <span className="text-brand-dark font-bold font-mono text-sm">{completedCount} / {totalCount}</span>
               </div>
             )}
@@ -60,7 +79,7 @@ export default async function HabitsPage() {
             ) : (
               <div className="flex flex-col gap-2.5">
                 {pendingHabits.map(habit => (
-                  <HabitItem key={habit.id} habit={habit} todayStr={todayStr} />
+                  <HabitItem key={habit.id} habit={habit} dateStr={selectedDate} />
                 ))}
                 {completedHabits.length > 0 && (
                   <>
@@ -69,7 +88,7 @@ export default async function HabitsPage() {
                     )}
                     {completedHabits.map(habit => (
                       <div key={habit.id} className="opacity-60">
-                        <HabitItem habit={habit} todayStr={todayStr} />
+                        <HabitItem habit={habit} dateStr={selectedDate} />
                       </div>
                     ))}
                   </>
@@ -98,7 +117,9 @@ export default async function HabitsPage() {
             {/* Hoy */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-4 pt-3.5 pb-1">
-                <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide">Hoy</p>
+                <p className="text-[10px] font-mono text-brand-muted uppercase tracking-wide">
+                  {selectedDate === todayStr ? 'Hoy' : dateLabel}
+                </p>
               </div>
               <div className="px-4 pb-4 flex items-end gap-3">
                 <div>

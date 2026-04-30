@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/app/_actions/auth'
 import { getTodayTodos } from '@/app/_actions/todos'
 import { getDashboardAgendaTasks } from '@/app/_actions/projects'
+import { localDateStr, localMondayStr } from '@/lib/timezone'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowUpRight, DollarSign, Dumbbell, FolderOpen, Briefcase, Heart, Crosshair } from 'lucide-react'
@@ -16,18 +17,10 @@ export default async function DashboardPage() {
 
   const supabase = await createClient()
 
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-
-  const dayOfWeek = today.getDay()
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-  const monday = new Date(today)
-  monday.setDate(monday.getDate() + mondayOffset)
-  const mondayStr = monday.toISOString().split('T')[0]
-
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    .toISOString()
-    .split('T')[0]
+  const todayStr     = localDateStr()
+  const mondayStr    = localMondayStr()
+  const today        = new Date(todayStr + 'T12:00:00')
+  const startOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
 
   const [
     habitsResult,

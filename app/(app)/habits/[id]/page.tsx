@@ -1,9 +1,11 @@
-import { getHabitWithCalendar } from '@/app/_actions/habits'
+import { getHabitWithCalendar, getHabitWeekLogs } from '@/app/_actions/habits'
 import { getAuthUser } from '@/app/_actions/auth'
+import { localDateStr, localMondayStr } from '@/lib/timezone'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Pencil, Flame } from 'lucide-react'
 import MonthCalendar from '../_components/MonthCalendar'
+import WeekDayStrip from '../_components/WeekDayStrip'
 
 export default async function HabitDetailPage({
   params,
@@ -14,26 +16,29 @@ export default async function HabitDetailPage({
   const user = await getAuthUser()
   if (!user) redirect('/login')
 
-  const { data, error } = await getHabitWithCalendar(id)
+  const [{ data, error }, { data: weekLogsData }] = await Promise.all([
+    getHabitWithCalendar(id),
+    getHabitWeekLogs(id),
+  ])
   if (error || !data) notFound()
 
   const { habit, completedDates } = data
 
-  // Build calendarData for per-habit mode (date -> true)
   const calendarData: Record<string, boolean> = {}
   for (const date of completedDates) {
     calendarData[date] = true
   }
 
-  const totalDays  = completedDates.length
-  const freqLabel  = habit.frequency === 7 ? 'Diario' : `${habit.frequency}x / semana`
+  const totalDays = completedDates.length
+  const freqLabel = habit.frequency === 7 ? 'Diario' : `${habit.frequency}x / semana`
 
-  // Streak from completedDates
-  const datesSet   = new Set(completedDates)
-  const today      = new Date()
-  const todayStr   = today.toISOString().split('T')[0]
-  let streak       = 0
-  const check      = new Date()
+  const todayStr  = localDateStr()
+  const mondayStr = localMondayStr()
+
+  // Streak
+  const datesSet = new Set(completedDates)
+  let streak     = 0
+  const check    = new Date(todayStr + 'T12:00:00')
   if (!datesSet.has(todayStr)) check.setDate(check.getDate() - 1)
   for (let i = 0; i < 365; i++) {
     const d = check.toISOString().split('T')[0]
@@ -42,11 +47,23 @@ export default async function HabitDetailPage({
   }
 
   // Weekly count
-  const dow    = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-  const mondayStr  = monday.toISOString().split('T')[0]
   const weeklyCount = completedDates.filter(d => d >= mondayStr && d <= todayStr).length
+
+  // Build 7 days of current week (Mon–Sun)
+  const weekDays: string[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mondayStr + 'T12:00:00')
+    d.setDate(d.getDate() + i)
+    weekDays.push(d.toISOString().split('T')[0])
+  }
+
+  // Build week logs array for the strip
+  const weekLogs = (weekLogsData ?? []).map(l => ({
+    id: l.id,
+    date: l.date,
+    completed: l.completed,
+    note: l.note ?? null,
+  }))
 
   return (
     <div className="min-h-screen bg-brand-bg dot-pattern">
@@ -92,12 +109,22 @@ export default async function HabitDetailPage({
 
         {/* Frequency tag */}
         <div className="flex items-center gap-2 mb-4">
-          <span
-            className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold font-mono text-white"
-            style={{ backgroundColor: habit.color }}
-          >
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold font-mono text-white"
+            style={{ backgroundColor: habit.color }}>
             {freqLabel}
           </span>
+        </div>
+
+        {/* Weekly day strip */}
+        <div className="mb-4">
+          <WeekDayStrip
+            habitId={habit.id}
+            habitColor={habit.color}
+            linkedModule={habit.linked_module}
+            weekDays={weekDays}
+            initialLogs={weekLogs}
+            todayStr={todayStr}
+          />
         </div>
 
         {/* Calendar */}

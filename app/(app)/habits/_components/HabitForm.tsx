@@ -10,6 +10,11 @@ const COLORS = [
   '#3D2010', '#84cc16',
 ]
 
+const LINKED_MODULES = [
+  { value: '', label: 'Ninguno' },
+  { value: 'gym', label: 'Gym' },
+]
+
 interface HabitFormProps {
   mode: 'create' | 'edit'
   habitId?: string
@@ -18,6 +23,7 @@ interface HabitFormProps {
     type: 'daily' | 'weekly'
     color: string
     frequency: number
+    linked_module?: string | null
   }
   onSuccess?: () => void
 }
@@ -25,10 +31,11 @@ interface HabitFormProps {
 export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: HabitFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [name, setName]         = useState(defaultValues?.name ?? '')
-  const [color, setColor]       = useState(defaultValues?.color ?? COLORS[0])
+  const [name, setName]           = useState(defaultValues?.name ?? '')
+  const [color, setColor]         = useState(defaultValues?.color ?? COLORS[0])
   const [frequency, setFrequency] = useState(defaultValues?.frequency ?? 7)
-  const [error, setError]       = useState('')
+  const [linkedModule, setLinkedModule] = useState(defaultValues?.linked_module ?? '')
+  const [error, setError]         = useState('')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +45,7 @@ export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: H
       const result =
         mode === 'create'
           ? await createHabit({ name, type, color, frequency })
-          : await updateHabit(habitId!, { name, type, color, frequency })
+          : await updateHabit(habitId!, { name, type, color, frequency, linked_module: linkedModule || null })
       if (result.error) { setError(result.error); return }
       router.refresh()
       if (onSuccess) onSuccess()
@@ -119,6 +126,30 @@ export default function HabitForm({ mode, habitId, defaultValues, onSuccess }: H
             />
           ))}
         </div>
+      </div>
+
+      {/* Módulo vinculado */}
+      <div className="flex flex-col gap-2">
+        <label className="text-xs text-brand-muted font-mono uppercase tracking-wide">Módulo vinculado</label>
+        <div className="flex gap-2">
+          {LINKED_MODULES.map(m => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => setLinkedModule(m.value)}
+              className={`px-3 py-2 rounded-xl text-xs font-bold font-mono transition-colors ${
+                linkedModule === m.value
+                  ? 'bg-brand-dark text-white'
+                  : 'bg-brand-bg border border-brand-border text-brand-muted hover:border-brand-dark'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        {linkedModule === 'gym' && (
+          <p className="text-[10px] font-mono text-brand-muted">Al completar este hábito podrás registrar el entrenamiento directamente</p>
+        )}
       </div>
 
       {error && (

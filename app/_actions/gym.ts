@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { localDateMinus } from '@/lib/timezone'
 
 async function getAuthUser() {
   const supabase = await createClient()
@@ -28,6 +29,32 @@ export async function getWorkouts(limit = 30) {
   }
 }
 
+export async function getWorkoutsCalendar() {
+  try {
+    const { supabase, user } = await getAuthUser()
+    const fromStr = localDateMinus(90)
+
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('date, type')
+      .eq('user_id', user.id)
+      .gte('date', fromStr)
+      .order('date', { ascending: false })
+
+    if (error) return { error: error.message, data: null }
+
+    // date -> array of types (to show on calendar)
+    const byDate: Record<string, string[]> = {}
+    for (const w of data ?? []) {
+      if (!byDate[w.date]) byDate[w.date] = []
+      byDate[w.date].push(w.type)
+    }
+    return { data: byDate, error: null }
+  } catch {
+    return { error: 'Error al obtener calendario', data: null }
+  }
+}
+
 export async function createWorkout(payload: {
   type: string
   duration_minutes: number | null
@@ -48,6 +75,7 @@ export async function createWorkout(payload: {
 
     if (error) return { error: error.message }
     revalidatePath('/gym')
+    revalidatePath('/habits')
     revalidatePath('/dashboard')
     return { success: true }
   } catch {

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Landmark, Smartphone, Banknote } from 'lucide-react'
 import { createTransaction, updateTransaction } from '@/app/_actions/finance'
+import { localDateStr } from '@/lib/timezone'
 
 const ACCOUNT_ICONS: Record<string, React.ElementType> = {
   bank:   Landmark,
@@ -58,7 +59,7 @@ export default function NewTransactionForm(props: Props) {
   const [amount, setAmount]       = useState(init ? String(init.amount) : '')
   const [category, setCategory]   = useState(init?.category ?? '')
   const [description, setDescription] = useState(init?.description ?? '')
-  const [date, setDate]           = useState(init?.date ?? new Date().toISOString().split('T')[0])
+  const [date, setDate]           = useState(init?.date ?? localDateStr())
   const [accountId, setAccountId] = useState<string>(init?.account_id ?? '')
   const [error, setError]         = useState('')
 
@@ -209,7 +210,7 @@ export default function NewTransactionForm(props: Props) {
         </div>
       )}
 
-      <div className="sticky bottom-0 pt-3 pb-5 bg-white border-t border-gray-100 mt-2">
+      <div className="sticky bottom-0 -mx-5 px-5 pt-3 pb-6 bg-white border-t border-gray-100 mt-2">
         <button type="submit" disabled={isPending || !amount || !category}
           className="w-full h-11 bg-brand-dark hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-sm font-mono transition">
           {isPending ? 'Guardando...' : props.mode === 'edit' ? 'Guardar cambios' : 'Guardar transacción'}
